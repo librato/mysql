@@ -9,7 +9,10 @@
 
 package mysql
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 const defaultBufSize = 4096
 
@@ -51,6 +54,21 @@ func (b *buffer) fill(need int) (err error) {
 		n, err = b.rd.Read(b.buf[b.length:])
 		b.length += n
 
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println("fill EOF (need: %d, got: %d)", need, b.length)
+				if b.length < need {
+					panic(err.Error())
+				} else {
+					err = nil
+				}
+
+			} else {
+				fmt.Println("fill ERR (need: %d, got: %d)", need, b.length)
+				panic(err.Error())
+			}
+		}
+
 		if b.length < need && err == nil {
 			continue
 		}
@@ -67,6 +85,10 @@ func (b *buffer) readNext(need int) (p []byte, err error) {
 		err = b.fill(need) // err deferred
 		if err == io.EOF && b.length >= need {
 			err = nil
+		}
+
+		if err != nil {
+			panic(err.Error())
 		}
 	}
 

@@ -52,22 +52,24 @@ func (mc *mysqlConn) readPacket() (data []byte, err error) {
 
 	// Read packet body [pktLen bytes]
 	data, err = mc.buf.readNext(pktLen)
-	if err == nil {
-		if pktLen < maxPacketSize {
-			return data, nil
-		}
-
-		var buf []byte
-		buf = append(buf, data...)
-
-		// More data
-		data, err = mc.readPacket()
-		if err == nil {
-			return append(buf, data...), nil
-		}
+	if err != nil {
+		panic(err.Error())
 	}
-	errLog.Print(err.Error())
-	return nil, driver.ErrBadConn
+
+	if pktLen < maxPacketSize {
+		return data, nil
+	}
+
+	var buf []byte
+	buf = append(buf, data...)
+
+	// More data
+	data, err = mc.readPacket()
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return append(buf, data...), nil
 }
 
 // Write packet buffer 'data'
