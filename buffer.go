@@ -56,8 +56,11 @@ func (b *buffer) fill(need int) (err error) {
 
 		if err != nil {
 			if err == io.EOF {
-				fmt.Printf("fill EOF (need: %d, got: %d) \r\n", need, b.length)
+				fmt.Printf("fill EOF (need: %d, got: %d, n: %d) \r\n", need, b.length, n)
 				if b.length < need {
+					fmt.Println("idx:", b.idx)
+					fmt.Println("buffer (string):", string(b.buf[b.idx:b.idx+b.length]))
+					fmt.Println("buffer (bytes):", b.buf[b.idx:b.idx+b.length])
 					panic(err.Error())
 				} else {
 					err = nil
