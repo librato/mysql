@@ -20,6 +20,9 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"net"
+	"time"
+
+	"github.com/librato/alerts/metrics"
 )
 
 // This struct is exported to make the driver directly accessible.
@@ -30,6 +33,7 @@ type MySQLDriver struct{}
 // See https://github.com/go-sql-driver/mysql#dsn-data-source-name for how
 // the DSN string is formated
 func (d *MySQLDriver) Open(dsn string) (driver.Conn, error) {
+	defer metrics.Time("mysql.open-conn", time.Now())
 	var err error
 
 	// New mysqlConn

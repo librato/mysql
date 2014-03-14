@@ -15,6 +15,8 @@ import (
 	"net"
 	"strings"
 	"time"
+
+	"github.com/librato/alerts/metrics"
 )
 
 type mysqlConn struct {
@@ -99,6 +101,7 @@ func (mc *mysqlConn) handleParams() (err error) {
 }
 
 func (mc *mysqlConn) Begin() (driver.Tx, error) {
+	defer metrics.Time("mysql.conn.begin-tx", time.Now())
 	err := mc.exec("START TRANSACTION")
 	if err == nil {
 		return &mysqlTx{mc}, err
@@ -108,6 +111,7 @@ func (mc *mysqlConn) Begin() (driver.Tx, error) {
 }
 
 func (mc *mysqlConn) Close() (err error) {
+	defer metrics.Time("mysql.conn.close", time.Now())
 	// Makes Close idempotent
 	if mc.netConn != nil {
 		mc.writeCommandPacket(comQuit)
@@ -122,6 +126,7 @@ func (mc *mysqlConn) Close() (err error) {
 }
 
 func (mc *mysqlConn) Prepare(query string) (driver.Stmt, error) {
+	defer metrics.Time("mysql.conn.prepare", time.Now())
 	// Send command
 	err := mc.writeCommandPacketStr(comStmtPrepare, query)
 	if err != nil {
@@ -151,6 +156,7 @@ func (mc *mysqlConn) Prepare(query string) (driver.Stmt, error) {
 }
 
 func (mc *mysqlConn) Exec(query string, args []driver.Value) (driver.Result, error) {
+	defer metrics.Time("mysql.conn.exec", time.Now())
 	if len(args) == 0 { // no args, fastpath
 		mc.affectedRows = 0
 		mc.insertId = 0
@@ -194,6 +200,7 @@ func (mc *mysqlConn) exec(query string) (err error) {
 }
 
 func (mc *mysqlConn) Query(query string, args []driver.Value) (driver.Rows, error) {
+	defer metrics.Time("mysql.conn.query", time.Now())
 	if len(args) == 0 { // no args, fastpath
 		// Send command
 		err := mc.writeCommandPacketStr(comQuery, query)

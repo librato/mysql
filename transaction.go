@@ -8,11 +8,18 @@
 
 package mysql
 
+import (
+	"time"
+
+	"github.com/librato/alerts/metrics"
+)
+
 type mysqlTx struct {
 	mc *mysqlConn
 }
 
 func (tx *mysqlTx) Commit() (err error) {
+	defer metrics.Time("mysql.tx.commit", time.Now())
 	if tx.mc == nil || tx.mc.netConn == nil {
 		return errInvalidConn
 	}
@@ -22,6 +29,7 @@ func (tx *mysqlTx) Commit() (err error) {
 }
 
 func (tx *mysqlTx) Rollback() (err error) {
+	defer metrics.Time("mysql.tx.rollback", time.Now())
 	if tx.mc == nil || tx.mc.netConn == nil {
 		return errInvalidConn
 	}
